@@ -15,16 +15,17 @@
 <a href=hw://vassistant/recognize?page=ChatPage&agentId=1&text=帮我设置中午十二点的闹钟&specifyIntent=APP_OPERATION&intent=APP_OPERATION>打开page</a></br>
 <a href=vassistant://voice/main?from=pushH5&text=播放周杰伦的告白气球&agentId=agent47bab76aec584b6bb393a6cea11f2559>播放音乐</a></br>
 <a href=vassistant://voice/main?from=pushH5&text=播放周杰伦的告白气球&agentId=skillHosting80ba57ff4a884289aee0c929dfd5dc18>播放音乐</a></br>
-<button style="font-size: 35px;" onclick="execcmd()">回到桌面</button></br>
+<button style="font-size: 35px;" onclick="execcmd()">关闭所有闹钟</button></br>
 <button style="font-size: 35px;" onclick="execcmd1()">播放音乐</button></br>
-<button style="font-size: 35px;" onclick="visionCamera()"></button></br>
+<button style="font-size: 35px;" onclick="execcmd2()">贾维斯打开淘宝</button></br>
+<button style="font-size: 35px;" onclick="visionCamera()">visionCamera</button></br>
 <button style="font-size: 35px;" onclick="translateTool()">translateTool</button></br>
 <button style="font-size: 35px;" onclick="aidispatchservice()">aidispatchservice</button></br>
 <script>
   
 function execcmd(){
   if(window.HiSearchNative){
-    window.HiSearchNative.openAppWithDeepLink('hw://vassistant/recognize?text=播放音乐&id=1&agentId=1','com.huawei.hmos.vassistant');
+    window.HiSearchNative.openAppWithDeepLink('hw://vassistant/recognize?text=关闭所有闹钟&id=1&agentId=1','com.huawei.hmos.vassistant');
     console.log('cccddd succeed')
   }else{
     console.log('cccddd no hisearch native');
@@ -34,6 +35,15 @@ function execcmd(){
 function execcmd1(){
   if(window.HiSearchNative){
     window.HiSearchNative.openAppWithDeepLink('hw://vassistant/recognize?text=播放音乐&id=1&agentId=1','com.huawei.hmos.vassistant');
+    console.log('cccddd succeed')
+  }else{
+    console.log('cccddd no hisearch native');
+  }
+}
+
+function execcmd2(){
+  if(window.HiSearchNative){
+    window.HiSearchNative.openAppWithDeepLink('hw://vassistant/recognize?text=查看淘宝还有哪些未发货的订单&id=1&agentId=1','com.huawei.hmos.vassistant');
     console.log('cccddd succeed')
   }else{
     console.log('cccddd no hisearch native');
