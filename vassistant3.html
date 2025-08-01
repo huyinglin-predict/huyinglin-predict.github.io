@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"> 
+<title>cc test</title> 
+<script>
+function getUid() {
+	if(window.HiVoiceInterface && window.HiVoiceInterface.hasOwnProperty('getUid')){
+		var uid = '123';
+		uid =window.HiVoiceInterface.getUid();
+		alert('uid is' + uid);	
+		console.log('uid is' + uid);	
+		document.getElementById("content").innerText ='cctest uid is : ' + uid;
+	}else{
+		document.getElementById("content").innerText ='cctest no HiVoiceInterface getUid';
+	}
+}
+
+function shareH5() {
+	if(window.HiVoiceInterface){
+	var shareinfo = '{"sharedH5LinkUrl":"http://gips1.baidu.com/it/u=3874647369,3220417986&fm=3028&app=3028&f=JPEG&fmt=auto?w=720&h=1280","sharedPic":"my pic","sharedWord":"ni hao" , "sharedTitle":"111","sharedContent":"11222"}'
+	window.HiVoiceInterface.shareH5(shareinfo);
+	document.getElementById("content").innerText ='cctest shareH5 succeed';
+	}else{
+		document.getElementById("content").innerText ='cctest no HiVoiceInterface shareH5';
+	}
+}	
+	
+function closeH5() {
+	if(window.HiVoiceInterface && window.HiVoiceInterface.hasOwnProperty('closeH5')){		
+		uid =window.HiVoiceInterface.closeH5();		
+	}else{
+		document.getElementById("content").innerText ='cctest no HiVoiceInterface closeH5';
+	}
+}
+</script>
+</head>
+<body>
+	
+<h1>我的 Web 页面</h1>
+<p id="content">一个段落。</p>
+<button type="button" onclick="getUid()">getUid</button></br>
+	<button type="button" onclick="shareH5()">shareH5</button></br>
+	<button type="button" onclick="closeH5()">closeH5</button></br>
+</body>
+</html>
