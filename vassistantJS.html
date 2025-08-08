@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>显示参数信息</title>
+    <style>
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin: 20px;
+        }
+        
+        .btn:hover {
+            background-color: #0b7dda;
+        }
+        
+        .output {
+            margin: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 50px;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <button class="btn" onclick="showPopup()">点击我显示信息</button>
+    <script>
+        var newDiv = document.createElement('div');
+        newDiv.className = 'output';
+        document.body.appendChild(newDiv);
+        function showPopup() {
+            let result = window.HiSearchNative.checkAppInstalled('com.huawei.hmos.vassistant');
+            newDiv.innerHTML = result;
+        }
+    </script>
+</body>
+</html>
