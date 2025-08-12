@@ -18,7 +18,7 @@ function getUid() {
 
 function shareH5() {
 	if(window.HiVoiceInterface){
-	var shareinfo = '{"sharedH5LinkUrl":"http://gips1.baidu.com/it/u=3874647369,3220417986&fm=3028&app=3028&f=JPEG&fmt=auto?w=720&h=1280","sharedPic":"my pic","sharedWord":"ni hao" , "sharedTitle":"111","sharedContent":"11222"}'
+	var shareinfo = '{"sharedH5LinkUrl":"http://gips1.baidu.com/it/u=3874647369,3220417986&fm=3028&app=3028&f=JPEG&fmt=auto?w=720&h=1280","sharedPic":"http://gips1.baidu.com/it/u=3874647369,3220417986&fm=3028&app=3028&f=JPEG&fmt=auto?w=720&h=1280","sharedWord":"ni hao" , "sharedTitle":"111","sharedContent":"11222"}'
 	var jsonshareinfo = JSON.stringify(shareinfo)
 	window.HiVoiceInterface.shareH5(jsonshareinfo);
 	document.getElementById("content").innerText ='cctest shareH5 succeed';
