@@ -6,15 +6,19 @@
     <title>WebView Message Port Demo</title>
 </head>
 <body>
+    <script id="user-data" type="application/json">
+{"requestId": "cloudx41156124564","eventName": "GetVariable","eventParams": {"custom": ["var1","var2"],"user": ["var1","var2"],"system": ["agent_login_session_id","foreground_apps"]}}
+    </script>
     <h1>WebView Message Port Demo</h1>
     <div>
-        <input type="button" value="SendToEts" onclick="PostMsgToEts(msgFromJS.value);"/><br/>
-        <input id="msgFromJS" type="text" value="send this message from HTML to ets"/><br/>
+        <input type="button" value="SendToEts" onclick="PostMsgToEts(jsonString);"/><br/>
     </div>
     <p class="output">display received message send from ets</p>
 </body>
 
 <script>
+const jsonElement = document.getElementById('user-data');
+const jsonString = jsonElement.innerText
 var h5Port;
 var output = document.querySelector('.output');
 
@@ -47,6 +51,7 @@ window.addEventListener('message', function (event) {
 
 // 3. 使用h5Port向应用侧发送消息。
 function PostMsgToEts(data) {
+    console.log(jsonString)
     if (h5Port) {
       h5Port.postMessage(data);
     } else {
