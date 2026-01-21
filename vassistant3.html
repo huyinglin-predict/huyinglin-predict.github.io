@@ -14,16 +14,6 @@ function getUid() {
 	}else{
 		document.getElementById("content").innerText ='cctest no CeliaAgentGUI getInitMsgParams';
 	}
-	
-	if(window.HiVoiceInterface && window.HiVoiceInterface.hasOwnProperty('getUid')){
-		var uid = '123';
-		uid =window.HiVoiceInterface.getUid();
-		alert('uid is' + uid);	
-		console.log('uid is' + uid);	
-		document.getElementById("content").innerText ='cctest uid is : ' + uid;
-	}else{
-		document.getElementById("content").innerText ='cctest no HiVoiceInterface getUid';
-	}
 }
 
 function shareH5() {
