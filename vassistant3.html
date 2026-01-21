@@ -5,6 +5,16 @@
 <title>cc test</title> 
 <script>
 function getUid() {
+	if(window.CeliaAgentGUI){
+		var cloudx = '123';
+		cloudx =window.CeliaAgentGUI.getInitMsgParams();
+		alert('cloudx is' + cloudx);	
+		console.log('cloudx is' + cloudx);	
+		document.getElementById("content").innerText ='cctest cloudx is : ' + cloudx;
+	}else{
+		document.getElementById("content").innerText ='cctest no CeliaAgentGUI getInitMsgParams';
+	}
+	
 	if(window.HiVoiceInterface && window.HiVoiceInterface.hasOwnProperty('getUid')){
 		var uid = '123';
 		uid =window.HiVoiceInterface.getUid();
