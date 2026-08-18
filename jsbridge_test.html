@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CustomWebPage JSBridge 接口测试</title>
+  <style>
+    body { font-family: sans-serif; padding: 16px; background: #f5f5f5; }
+    h2 { color: #333; border-bottom: 2px solid #3498db; padding-bottom: 8px; margin-top: 24px; }
+    h3 { color: #666; margin-top: 16px; }
+    button { font-size: 15px; padding: 10px 16px; margin: 6px 4px; border-radius: 8px; border: none; color: #fff; cursor: pointer; min-width: 200px; text-align: left; }
+    .risk-high { background: #e74c3c; }
+    .risk-med { background: #f39c12; }
+    .risk-low { background: #95a5a6; }
+    .risk-info { background: #3498db; }
+    .no-check { background: #c0392b; }
+    .has-check { background: #27ae60; }
+    .info { font-size: 12px; color: #888; margin-bottom: 4px; }
+    .section { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
+    .tag-no-check { background: #fde2e2; color: #c0392b; }
+    .tag-has-check { background: #d5f5e3; color: #27ae60; }
+    #log { background: #1a1a2e; color: #0f0; font-family: monospace; font-size: 12px; padding: 12px; border-radius: 8px; min-height: 200px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+    .legend { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+  </style>
+</head>
+<body>
+
+<h1>CustomWebPage JSBridge 接口测试</h1>
+<p style="color:#888; font-size:13px;">
+  测试目标: HiSearchNative (父类 CustomWebJsBridge) + HiSearchNative (子类) + _localWebNative<br>
+  当前页面 URL: <span id="currentUrl" style="color:#e74c3c; font-weight:bold;"></span>
+</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#c0392b"></div> 无白名单校验 - 高风险</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f39c12"></div> 无白名单校验 - 中风险</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#95a5a6"></div> 无白名单校验 - 低风险</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div> 有白名单校验</div>
+</div>
+
+<!-- ============================================================ -->
+<div class="section">
+<h2>1. _localWebNative (LocalWebNative) - 无校验接口</h2>
+
+<h3>openH5UrlByHwBrowser(superLink, startmode) <span class="tag tag-no-check">无校验</span></h3>
+<p class="info">在华为浏览器中打开任意 URL。参数: superLink=目标URL, startmode=启动模式(默认'cct')</p>
+<button class="no-check" onclick="openH5('https://www.baidu.com')">打开百度 (华为浏览器)</button>
+<button class="no-check" onclick="openH5('https://www.bing.com')">打开 Bing (华为浏览器)</button>
+<button class="no-check" onclick="openH5Custom('https://www.baidu.com', 'cashierpage')">打开百度 (cashierpage模式)</button>
+
+<h3>shareReport(data) <span class="tag tag-no-check">无校验</span></h3>
+<p class="info">触发分享面板。参数: data.shareUrl, data.query, data.imageUrl</p>
+<button class="no-check" onclick="shareReportTest()">分享 (自定义URL+标题)</button>
+<button class="no-check" onclick="shareReportImage()">分享 (带图片URL)</button>
+
+<h3>getDeepResearchAttach(param) <span class="tag tag-no-check">无校验</span></h3>
+<p class="info">返回 deepResearchAttach 对象 (可能包含敏感数据)</p>
+<button class="no-check" onclick="getAttach()">获取 deepResearchAttach</button>
+
+<h3>onRegenerateResearchFiles(param) <span class="tag tag-no-check">无校验</span></h3>
+<p class="info">触发重新生成深度研究文件。参数: param (可选字符串)</p>
+<button class="no-check" onclick="regenFiles()">触发重新生成 (无参数)</button>
+<button class="no-check" onclick="regenFilesParam()">触发重新生成 (带参数)</button>
+
+<h3>closeOption() / fullScreenOption() / collapseScreenOption() <span class="tag tag-no-check">无校验</span></h3>
+<p class="info">控制分屏 UI 布局</p>
+<button class="risk-low" onclick="callLocal('closeOption')">closeOption (关闭C区)</button>
+<button class="risk-low" onclick="callLocal('fullScreenOption')">fullScreenOption (全屏C区)</button>
+<button class="risk-low" onclick="callLocal('collapseScreenOption')">collapseScreenOption (收起C区)</button>
+</div>
+
+<!-- ============================================================ -->
+<div class="section">
+<h2>2. HiSearchNative (父类 CustomWebJsBridge) - 混合校验</h2>
+
+<h3>openDeeplinkOrH5(bundleName, deeplink, h5) <span class="tag tag-no-check">无校验</span></h3>
+<p class="info">打开 deeplink 或 H5 URL。参数: bundleName, deeplink, h5</p>
+<button class="no-check" onclick="openDeeplinkOrH5_H5()">打开 H5 URL</button>
+<button class="no-check" onclick="openDeeplinkOrH5_Deeplink()">打开 deeplink (vassistant)</button>
+<button class="no-check" onclick="openDeeplinkOrH5_Both()">尝试 deeplink + H5 fallback</button>
+
+<h3>jumpToShoppingPage(queryId) <span class="tag tag-no-check">无校验</span></h3>
+<p class="info">跳转识图购页面。参数: queryId</p>
+<button class="risk-low" onclick="callHiSearch('jumpToShoppingPage', 'test_query_123')">jumpToShoppingPage (测试queryId)</button>
+
+<h3>openAppWithDeepLink(deeplink, pkgname) <span class="tag tag-has-check">有校验</span></h3>
+<p class="info">启动目标应用。参数: deeplink=目标URI, pkgname=目标包名。需要白名单页面调用。</p>
+<button class="has-check" onclick="callHiSearchArgs('openAppWithDeepLink', 'hw://vassistant/recognize?text=关闭所有闹钟&id=1&agentId=1', 'com.huawei.hmos.vassistant')">关闭所有闹钟</button>
+<button class="has-check" onclick="callHiSearchArgs('openAppWithDeepLink', 'hw://vassistant/recognize?text=播放音乐&id=1&agentId=1', 'com.huawei.hmos.vassistant')">播放音乐</button>
+<button class="has-check" onclick="callHiSearchArgs('openAppWithDeepLink', 'hw://vassistant/recognize?page=LiveMainPage&agentId=1&agentPageScene=SeeWorldCall', 'com.huawei.hmos.vassistant')">打开小艺看世界</button>
+<button class="has-check" onclick="callHiSearchArgs('openAppWithDeepLink', 'hw://vassistant/recognize?page=ChatPage&agentId=skillHosting80ba57ff4a884289aee0c929dfd5dc18&text=打开音乐&specifyIntent=APP_OPERATION&intent=APP_OPERATION', 'com.huawei.hmos.vassistant')">打开page (skillHosting)</button>
+<button class="has-check" onclick="callHiSearchArgs('openAppWithDeepLink', 'vassistant://voice/main?from=pushH5&text=播放周杰伦的告白气球&agentId=1', 'com.huawei.hmos.vassistant')">播放告白气球</button>
+<button class="has-check" onclick="callHiSearchArgs('openAppWithDeepLink', 'visionCamera://com.huawei.hmos.vassistant?page=text', 'com.huawei.hmos.vassistant')">visionCamera</button>
+<button class="has-check" onclick="callHiSearchArgs('openAppWithDeepLink', 'translateTool://com.huawei.hmos.vassistant/text?page=text', 'com.huawei.hmos.vassistant')">translateTool</button>
+<button class="has-check" onclick="callHiSearchArgs('openAppWithDeepLink', 'aidispatch://abilityexpress/web?h5_link=https://seuercc.github.io/easyhtml/vassistant.html', 'com.huawei.hmos.aidispatchservice')">aidispatchservice</button>
+
+<h3>checkAppInstalled(pkgname) <span class="tag tag-has-check">有校验</span></h3>
+<p class="info">检查应用是否安装。参数: pkgname=目标包名</p>
+<button class="has-check" onclick="checkApp('com.huawei.hmos.vassistant')">检查 vassistant</button>
+<button class="has-check" onclick="checkApp('com.huawei.hmos.browser')">检查 browser</button>
+<button class="has-check" onclick="checkApp('com.huawei.hmos.aidispatchservice')">检查 aidispatchservice</button>
+<button class="has-check" onclick="checkApp('com.tencent.mm')">检查微信</button>
+
+<h3>reportEvent(eventid, value) <span class="tag tag-has-check">有校验</span></h3>
+<p class="info">上报事件。参数: eventid=事件ID, value=JSON字符串</p>
+<button class="has-check" onclick="reportEventTest()">上报测试事件</button>
+
+<h3>onBackPressed() <span class="tag tag-has-check">有校验</span></h3>
+<p class="info">返回/退出。无参数。</p>
+<button class="has-check" onclick="callHiSearch('onBackPressed')">onBackPressed (返回)</button>
+</div>
+
+<!-- ============================================================ -->
+<div class="section">
+<h2>3. HiSearchNative (子类) - 有校验接口</h2>
+
+<h3>splitScreenAndJump(superLink) <span class="tag tag-has-check">有校验</span></h3>
+<p class="info">分屏跳转。参数: superLink=目标链接</p>
+<button class="has-check" onclick="callHiSearch('splitScreenAndJump', 'https://www.baidu.com')">splitScreenAndJump (百度)</button>
+
+<h3>openIap(params) <span class="tag tag-has-check">有校验</span></h3>
+<p class="info">打开计费页。参数: params={agentid, agentStatus, accountType, transBuffer}</p>
+<button class="has-check" onclick="openIapTest()">openIap (测试参数)</button>
+</div>
+
+<!-- ============================================================ -->
+<div class="section">
+<h2>4. 有校验接口 - 批量测试 (白名单页面下才能成功)</h2>
+<button class="risk-info" onclick="batchTest()">批量测试所有有校验接口</button>
+<p class="info">在 injected URL 页面下，有校验接口应返回 false/不执行；在白名单页面下应正常执行</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="section">
+<h2>5. 探测接口可用性</h2>
+<button class="risk-info" onclick="probeInterfaces()">探测所有 JS 接口是否存在</button>
+</div>
+
+<!-- ============================================================ -->
+<h2>日志输出</h2>
+<button class="risk-info" onclick="clearLog()">清空日志</button>
+<div id="log"></div>
+
+<script>
+// ============================================================
+//  日志工具
+// ============================================================
+function log(msg) {
+  var el = document.getElementById('log');
+  var ts = new Date().toLocaleTimeString();
+  el.textContent += '[' + ts + '] ' + msg + '\n';
+  el.scrollTop = el.scrollHeight;
+  console.log(msg);
+}
+
+function clearLog() {
+  document.getElementById('log').textContent = '';
+}
+
+// ============================================================
+//  显示当前页面 URL
+// ============================================================
+document.getElementById('currentUrl').textContent = window.location.href;
+
+// ============================================================
+//  _localWebNative 接口调用
+// ============================================================
+function openH5(url) {
+  if (window._localWebNative) {
+    try {
+      window._localWebNative.openH5UrlByHwBrowser(url);
+      log('[SUCCESS] _localWebNative.openH5UrlByHwBrowser(' + url + ')');
+    } catch(e) {
+      log('[ERROR] _localWebNative.openH5UrlByHwBrowser: ' + e.message);
+    }
+  } else {
+    log('[FAIL] _localWebNative not found');
+  }
+}
+
+function openH5Custom(url, startmode) {
+  if (window._localWebNative) {
+    try {
+      window._localWebNative.openH5UrlByHwBrowser(url, startmode);
+      log('[SUCCESS] _localWebNative.openH5UrlByHwBrowser(' + url + ', ' + startmode + ')');
+    } catch(e) {
+      log('[ERROR] _localWebNative.openH5UrlByHwBrowser: ' + e.message);
+    }
+  } else {
+    log('[FAIL] _localWebNative not found');
+  }
+}
+
+function shareReportTest() {
+  if (window._localWebNative) {
+    try {
+      var data = {
+        shareUrl: 'https://www.baidu.com',
+        query: '这是一条来自 JSBridge 的分享测试',
+        imageUrl: ''
+      };
+      window._localWebNative.shareReport(data);
+      log('[SUCCESS] _localWebNative.shareReport(' + JSON.stringify(data) + ')');
+    } catch(e) {
+      log('[ERROR] _localWebNative.shareReport: ' + e.message);
+    }
+  } else {
+    log('[FAIL] _localWebNative not found');
+  }
+}
+
+function shareReportImage() {
+  if (window._localWebNative) {
+    try {
+      var data = {
+        shareUrl: 'https://www.baidu.com',
+        query: '带图片的分享测试',
+        imageUrl: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png'
+      };
+      window._localWebNative.shareReport(data);
+      log('[SUCCESS] _localWebNative.shareReport(' + JSON.stringify(data) + ')');
+    } catch(e) {
+      log('[ERROR] _localWebNative.shareReport: ' + e.message);
+    }
+  } else {
+    log('[FAIL] _localWebNative not found');
+  }
+}
+
+function getAttach() {
+  if (window._localWebNative) {
+    try {
+      var result = window._localWebNative.getDeepResearchAttach();
+      log('[SUCCESS] _localWebNative.getDeepResearchAttach() => ' + JSON.stringify(result));
+    } catch(e) {
+      log('[ERROR] _localWebNative.getDeepResearchAttach: ' + e.message);
+    }
+  } else {
+    log('[FAIL] _localWebNative not found');
+  }
+}
+
+function regenFiles() {
+  if (window._localWebNative) {
+    try {
+      window._localWebNative.onRegenerateResearchFiles();
+      log('[SUCCESS] _localWebNative.onRegenerateResearchFiles()');
+    } catch(e) {
+      log('[ERROR] _localWebNative.onRegenerateResearchFiles: ' + e.message);
+    }
+  } else {
+    log('[FAIL] _localWebNative not found');
+  }
+}
+
+function regenFilesParam() {
+  if (window._localWebNative) {
+    try {
+      var param = JSON.stringify({ taskId: 'test_task_123', action: 'regenerate' });
+      window._localWebNative.onRegenerateResearchFiles(param);
+      log('[SUCCESS] _localWebNative.onRegenerateResearchFiles(' + param + ')');
+    } catch(e) {
+      log('[ERROR] _localWebNative.onRegenerateResearchFiles: ' + e.message);
+    }
+  } else {
+    log('[FAIL] _localWebNative not found');
+  }
+}
+
+function callLocal(method) {
+  if (window._localWebNative) {
+    try {
+      window._localWebNative[method]();
+      log('[SUCCESS] _localWebNative.' + method + '()');
+    } catch(e) {
+      log('[ERROR] _localWebNative.' + method + ': ' + e.message);
+    }
+  } else {
+    log('[FAIL] _localWebNative not found');
+  }
+}
+
+// ============================================================
+//  HiSearchNative 接口调用
+// ============================================================
+function callHiSearch(method, arg1) {
+  if (window.HiSearchNative) {
+    try {
+      if (arg1 !== undefined) {
+        var result = window.HiSearchNative[method](arg1);
+        log('[SUCCESS] HiSearchNative.' + method + '(' + arg1 + ') => ' + result);
+      } else {
+        var result = window.HiSearchNative[method]();
+        log('[SUCCESS] HiSearchNative.' + method + '() => ' + result);
+      }
+    } catch(e) {
+      log('[ERROR] HiSearchNative.' + method + ': ' + e.message);
+    }
+  } else {
+    log('[FAIL] HiSearchNative not found');
+  }
+}
+
+function callHiSearchArgs(method, arg1, arg2) {
+  if (window.HiSearchNative) {
+    try {
+      var result = window.HiSearchNative[method](arg1, arg2);
+      log('[SUCCESS] HiSearchNative.' + method + '(' + arg1 + ', ' + arg2 + ') => ' + result);
+    } catch(e) {
+      log('[ERROR] HiSearchNative.' + method + ': ' + e.message);
+    }
+  } else {
+    log('[FAIL] HiSearchNative not found');
+  }
+}
+
+function openDeeplinkOrH5_H5() {
+  if (window.HiSearchNative) {
+    try {
+      window.HiSearchNative.openDeeplinkOrH5(undefined, undefined, 'https://www.baidu.com');
+      log('[SUCCESS] HiSearchNative.openDeeplinkOrH5(undefined, undefined, https://www.baidu.com)');
+    } catch(e) {
+      log('[ERROR] HiSearchNative.openDeeplinkOrH5: ' + e.message);
+    }
+  } else {
+    log('[FAIL] HiSearchNative not found');
+  }
+}
+
+function openDeeplinkOrH5_Deeplink() {
+  if (window.HiSearchNative) {
+    try {
+      window.HiSearchNative.openDeeplinkOrH5('com.huawei.hmos.vassistant', 'vassistant://voice/main?text=hello', undefined);
+      log('[SUCCESS] HiSearchNative.openDeeplinkOrH5(vassistant, deeplink, undefined)');
+    } catch(e) {
+      log('[ERROR] HiSearchNative.openDeeplinkOrH5: ' + e.message);
+    }
+  } else {
+    log('[FAIL] HiSearchNative not found');
+  }
+}
+
+function openDeeplinkOrH5_Both() {
+  if (window.HiSearchNative) {
+    try {
+      window.HiSearchNative.openDeeplinkOrH5('com.huawei.hmos.vassistant', 'vassistant://voice/main?text=hello', 'https://www.baidu.com');
+      log('[SUCCESS] HiSearchNative.openDeeplinkOrH5(vassistant, deeplink, h5)');
+    } catch(e) {
+      log('[ERROR] HiSearchNative.openDeeplinkOrH5: ' + e.message);
+    }
+  } else {
+    log('[FAIL] HiSearchNative not found');
+  }
+}
+
+function checkApp(pkgname) {
+  if (window.HiSearchNative) {
+    try {
+      var result = window.HiSearchNative.checkAppInstalled(pkgname);
+      log('[SUCCESS] HiSearchNative.checkAppInstalled(' + pkgname + ') => ' + result);
+    } catch(e) {
+      log('[ERROR] HiSearchNative.checkAppInstalled: ' + e.message);
+    }
+  } else {
+    log('[FAIL] HiSearchNative not found');
+  }
+}
+
+function reportEventTest() {
+  if (window.HiSearchNative) {
+    try {
+      var value = JSON.stringify({ key1: 'value1', key2: 'value2' });
+      window.HiSearchNative.reportEvent(10001, value);
+      log('[SUCCESS] HiSearchNative.reportEvent(10001, ' + value + ')');
+    } catch(e) {
+      log('[ERROR] HiSearchNative.reportEvent: ' + e.message);
+    }
+  } else {
+    log('[FAIL] HiSearchNative not found');
+  }
+}
+
+function openIapTest() {
+  if (window.HiSearchNative) {
+    try {
+      var params = { agentid: 'test_agent', agentStatus: '1', accountType: 'free', transBuffer: '100' };
+      window.HiSearchNative.openIap(params);
+      log('[SUCCESS] HiSearchNative.openIap(' + JSON.stringify(params) + ')');
+    } catch(e) {
+      log('[ERROR] HiSearchNative.openIap: ' + e.message);
+    }
+  } else {
+    log('[FAIL] HiSearchNative not found');
+  }
+}
+
+// ============================================================
+//  批量测试
+// ============================================================
+function batchTest() {
+  log('====== 批量测试开始 ======');
+  log('当前页面: ' + window.location.href);
+
+  // 有校验接口
+  var methods = [
+    { obj: 'HiSearchNative', method: 'openAppWithDeepLink', args: ['hw://vassistant/recognize?text=hello&agentId=1', 'com.huawei.hmos.vassistant'] },
+    { obj: 'HiSearchNative', method: 'checkAppInstalled', args: ['com.huawei.hmos.vassistant'] },
+    { obj: 'HiSearchNative', method: 'reportEvent', args: [10001, '{"test":"1"}'] },
+    { obj: 'HiSearchNative', method: 'onBackPressed', args: [] },
+    { obj: 'HiSearchNative', method: 'splitScreenAndJump', args: ['https://www.baidu.com'] },
+    { obj: 'HiSearchNative', method: 'openIap', args: [{ agentid: 'test' }] },
+    { obj: 'HiSearchNative', method: 'openDeeplinkOrH5', args: [undefined, undefined, 'https://www.baidu.com'] },
+    { obj: 'HiSearchNative', method: 'jumpToShoppingPage', args: ['test_query'] }
+  ];
+
+  for (var i = 0; i < methods.length; i++) {
+    var m = methods[i];
+    var obj = window[m.obj];
+    if (obj && obj[m.method]) {
+      try {
+        var result = obj[m.method].apply(obj, m.args);
+        log('[BATCH] ' + m.obj + '.' + m.method + ' => ' + result + ' (args: ' + JSON.stringify(m.args) + ')');
+      } catch(e) {
+        log('[BATCH] ' + m.obj + '.' + m.method + ' => ERROR: ' + e.message);
+      }
+    } else {
+      log('[BATCH] ' + m.obj + '.' + m.method + ' => NOT FOUND');
+    }
+  }
+  log('====== 批量测试结束 ======');
+}
+
+// ============================================================
+//  接口探测
+// ============================================================
+function probeInterfaces() {
+  log('====== 接口探测开始 ======');
+
+  var interfaces = ['HiSearchNative', '_localWebNative'];
+  for (var i = 0; i < interfaces.length; i++) {
+    var name = interfaces[i];
+    var obj = window[name];
+    if (obj) {
+      log('[PROBE] ' + name + ' => EXISTS');
+      var methods = Object.getOwnPropertyNames(Object.getPrototypeOf(obj));
+      for (var j = 0; j < methods.length; j++) {
+        if (methods[j] !== 'constructor') {
+          log('[PROBE]   ' + name + '.' + methods[j] + ' => ' + typeof obj[methods[j]]);
+        }
+      }
+    } else {
+      log('[PROBE] ' + name + ' => NOT FOUND');
+    }
+  }
+
+  log('====== 接口探测结束 ======');
+}
+
+// 页面加载时自动探测
+window.onload = function() {
+  log('页面加载完成，当前 URL: ' + window.location.href);
+  probeInterfaces();
+};
+</script>
+
+</body>
+</html>
